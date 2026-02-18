@@ -1,0 +1,10 @@
+opencv-python
+tritonclient[grpc]
+Pillow
+tqdm
+onnx
+onnxscript
+cuda-python
+nvtx
+numpy==1.26.0
+PyYAML

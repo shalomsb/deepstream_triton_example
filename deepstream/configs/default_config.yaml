@@ -1,0 +1,24 @@
+streammux:
+  width: 1920
+  height: 1080
+  MUXER_BATCH_TIMEOUT_USEC: 33000
+
+pgie:
+  config_file: config_infer.txt
+  interval: 0
+  confidence_threshold: 0.3  # Detection confidence threshold (0.0-1.0)
+
+tracker:
+  use_dcf_tracker: true  # true = NvDCF (better accuracy), false = IOU (faster, simpler)
+
+display:
+  tiled_output_width: 1920   # Display window width
+  tiled_output_height: 1080  # Display window height
+  fps_print_interval: 5.0    # Seconds between FPS reports
+
+# source: /dev/video0
+# source: file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4
+source: file:///deepstream/streams/basketball.mp4
+
+file_source:
+  loop: true  # Enable looping for file:// sources (default: true)

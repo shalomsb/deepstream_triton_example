@@ -1,0 +1,16 @@
+*.engine
+*.onnx
+*.plan
+*.jpg
+*.jpeg
+*.pt
+*.pth
+*.tar
+__pycache__
+
+*.mp4
+*.h264
+app/deepstream_app.c
+*.onnx.data
+*.whl
+CLAUDE.md

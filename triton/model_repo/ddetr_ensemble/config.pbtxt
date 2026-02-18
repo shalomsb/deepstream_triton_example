@@ -1,0 +1,86 @@
+name: "ddetr_ensemble"
+platform: "ensemble"
+max_batch_size: 1
+
+input [
+    {
+        name: "input_images"
+        data_type: TYPE_UINT8
+        dims: [3, 1080, 1920]
+    }
+]
+
+output [
+    {
+        name: "ensemble_labels"
+        data_type: TYPE_INT64
+        dims: [-1]
+    }, 
+    {
+        name: "ensemble_scores"
+        data_type: TYPE_FP32
+        dims: [-1]
+    },
+    {
+        name: "ensemble_boxes"
+        data_type: TYPE_FP32
+        dims: [-1, 4]
+    }
+]
+
+ensemble_scheduling {
+    step [
+        {
+            model_name: "ddetr_preprocess"
+            model_version: 1
+            input_map {
+                key: "input_images"
+                value: "input_images"
+            }
+            output_map {
+                key: "preprocessed_image"
+                value: "preprocessed_image"
+            }
+        }, 
+        {
+            model_name: "ddetr"
+            model_version: 1
+            input_map {
+                key: "inputs"
+                value: "preprocessed_image"
+            }
+            output_map {
+                key: "pred_logits"
+                value: "res_logits"
+            }
+            output_map {
+                key: "pred_boxes"
+                value: "res_boxes"
+            }
+        },
+        {
+            model_name: "ddetr_postprocess"
+            model_version: 1
+            input_map {
+                key: "res_logits"
+                value: "res_logits"
+            }
+            input_map {
+                key: "res_boxes"
+                value: "res_boxes"
+            }
+            output_map {
+                key: "output_labels"
+                value: "ensemble_labels"
+            }
+            output_map {
+                key: "output_scores"
+                value: "ensemble_scores"
+            }
+            output_map {
+                key: "output_boxes"
+                value: "ensemble_boxes"
+            }
+        }
+    ]
+}

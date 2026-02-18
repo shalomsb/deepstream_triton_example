@@ -1,0 +1,49 @@
+infer_config {
+  unique_id: 1
+  max_batch_size: 1
+  backend {
+    triton {
+      model_name: "ddetr_ensemble"
+      version: -1
+
+      model_repo {
+        root: "/triton/model_repo"
+        log_level: 2
+        strict_model_config: true
+        # Triton runtime would reservd pinned memory
+        pinned_memory_pool_byte_size: 1710886400
+        # Triton runtime would reserve CUDA device memory on GPU 0
+        cuda_device_memory { device: 0, memory_pool_byte_size: 671088640 }
+      }
+      # grpc {
+      #   url: "localhost:8001"
+      #   enable_cuda_buffer_sharing: false
+      # }
+    }
+    output_mem_type: MEMORY_TYPE_CPU
+  }
+
+
+  preprocess {
+    network_format: IMAGE_FORMAT_RGB
+    tensor_order: TENSOR_ORDER_LINEAR
+    normalize {
+      scale_factor: 1.0
+    }
+    maintain_aspect_ratio: 0
+    frame_scaling_filter: 1
+  }
+
+  postprocess {
+    other {}
+  }
+}
+
+input_control {
+  process_mode: PROCESS_MODE_FULL_FRAME
+  interval: 0
+}
+
+output_control {
+  output_tensor_meta: true
+}
