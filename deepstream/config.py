@@ -1,32 +1,23 @@
-import os
-from constants import Constants
-from utils import read_yaml_file
+from ds_pipeline import AppConfig
 
-class Config:
-    def __init__(self, config_file, project_directory, program_start_time):
-        self.project_directory = project_directory
-        self.program_start_time = program_start_time
-        self.config_directory = os.path.join(project_directory, Constants.CONFIG_DIRECTORY)
-        self.config_file = os.path.join(self.config_directory, config_file)
-        config_data = read_yaml_file(self.config_file)
 
-        self.streammux_input_width = config_data["streammux"]["width"]
-        self.streammux_input_height = config_data["streammux"]["height"]
-        self.MUXER_BATCH_TIMEOUT_USEC = config_data["streammux"]["MUXER_BATCH_TIMEOUT_USEC"]
+class Config(AppConfig):
+    def __init__(self, yaml_filename="configs/config.yaml"):
+        super().__init__(__file__, yaml_filename=yaml_filename)
 
-        self.pgie_config_file = os.path.join(self.project_directory, Constants.CONFIG_DIRECTORY, config_data["pgie"]["config_file"])
-        self.pgie_interval = config_data["pgie"]["interval"]
-        self.confidence_threshold = config_data["pgie"]["confidence_threshold"]
+        self.source = self.data["source"]
+        self.file_loop = self.get("file_source", "loop", default=True)
 
-        # Select tracker configuration based on use_dcf_tracker setting
-        use_dcf_tracker = config_data["tracker"]["use_dcf_tracker"]
-        tracker_file = "tracker_config_dcf.txt" if use_dcf_tracker else "tracker_config_iou.txt"
-        self.tracker_config_file = os.path.join(self.project_directory, Constants.CONFIG_DIRECTORY, tracker_file)
-        self.use_dcf_tracker = use_dcf_tracker
+        self.pgie_config = self.resolve("pgie", "config_file")
+        self.tracker_config = self.resolve("tracker", "config_file")
 
-        self.tiled_output_width = config_data["display"]["tiled_output_width"]
-        self.tiled_output_height = config_data["display"]["tiled_output_height"]
-        self.fps_print_interval = config_data["display"]["fps_print_interval"]
+        sm = self.data.get("streammux", {})
+        self.streammux_width = sm.get("width", 1920)
+        self.streammux_height = sm.get("height", 1080)
+        self.streammux_batch_size = sm.get("batch_size", 1)
 
-        self.source = config_data["source"]
-        self.file_loop = config_data["file_source"]["loop"]
+        pgie = self.data.get("pgie", {})
+        self.preprocess_width = pgie.get("preprocess_width", 640)
+        self.preprocess_height = pgie.get("preprocess_height", 640)
+        self.conf_threshold = pgie.get("conf_threshold", 0.25)
+        self.labels_file = pgie.get("labels_file", "/deepstream/labels.txt")

@@ -1,28 +1,58 @@
-from datetime import datetime, timezone
-import os
+#!/usr/bin/env python3
 
-import deepstream
+import sys
+
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst
+from common.platform_info import PlatformInfo
+from ds_pipeline import (
+    Logger,
+    create_pipeline, create_source_bin, create_streammux,
+    create_pgie_inferserver, create_tracker,
+    create_nvvidconv, create_nvosd, create_sink,
+    run_pipeline,
+)
 from config import Config
-from constants import Constants
-from logger import CustomLogger
+from callbacks import pgie_src_probe, osd_probe
 
 
 def main():
-    # Store application top-level arguments
-    program_start_time = datetime.now(timezone.utc)
-    current_workdir = os.path.dirname(os.path.abspath(__file__))
+    config = Config()
+    logger = Logger("deepstream-yolo26x")
+    platform_info = PlatformInfo()
+    Gst.init(None)
 
-    logger = CustomLogger("deepstream_app", log_to_terminal=True, log_to_file=False)
+    pipeline = create_pipeline("deepstream-yolo26x", logger)
 
-    # Initialize App Config
-    app_config = Config(config_file=Constants.DEFAULT_CONFIG_FILE,
-                                    project_directory=current_workdir,
-                                    program_start_time=program_start_time)
+    source_bin = create_source_bin(0, config.source, logger, file_loop=config.file_loop)
+    streammux = create_streammux("yolo26x", batch_size=config.streammux_batch_size,
+                                 width=config.streammux_width,
+                                 height=config.streammux_height, logger=logger)
+    pgie = create_pgie_inferserver("yolo26x", config.pgie_config, logger)
+    tracker = create_tracker("yolo26x", config.tracker_config, logger)
+    nvvidconv = create_nvvidconv("yolo26x", logger)
+    nvosd = create_nvosd("yolo26x", logger)
+    sink = create_sink("yolo26x", platform_info, logger)
 
-    # Run the DeepStream application
-    deepstream.main(config=app_config, logger=logger)
+    for el in [source_bin, streammux, pgie, tracker, nvvidconv, nvosd, sink]:
+        pipeline.add(el)
 
-    logger.info("Main App Exiting")
+    srcpad = source_bin.get_static_pad("src")
+    sinkpad = streammux.request_pad_simple("sink_0")
+    srcpad.link(sinkpad)
 
-if __name__ == "__main__":
-    main()
+    streammux.link(pgie)
+    pgie.link(tracker)
+    tracker.link(nvvidconv)
+    nvvidconv.link(nvosd)
+    nvosd.link(sink)
+
+    pgie.get_static_pad("src").add_probe(Gst.PadProbeType.BUFFER, pgie_src_probe, config)
+    nvosd.get_static_pad("sink").add_probe(Gst.PadProbeType.BUFFER, osd_probe, config)
+
+    run_pipeline(pipeline, logger)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,19 @@
+source: file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4
+
+streammux:
+  width: 1920
+  height: 1080
+  batch_size: 1
+
+pgie:
+  config_file: configs/config_infer.txt
+  preprocess_width: 640
+  preprocess_height: 640
+  conf_threshold: 0.25
+  labels_file: /deepstream/labels.txt
+
+tracker:
+  config_file: configs/tracker_config_dcf.txt
+
+file_source:
+  loop: true
