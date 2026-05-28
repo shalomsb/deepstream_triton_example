@@ -1,6 +1,6 @@
 name: "yolo26x_ensemble"
 platform: "ensemble"
-max_batch_size: 1
+max_batch_size: 8
 
 input [
   {

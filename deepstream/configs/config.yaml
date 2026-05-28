@@ -1,19 +1,23 @@
-source: file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4
+sources:
+  - file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.h264
 
 streammux:
-  width: 1920
-  height: 1080
-  batch_size: 1
+  width: 1280
+  height: 720
+  # batch_size: omitted -> defaults to len(sources), clamped 1..8
+
+tiler:
+  width: 1280
+  height: 720
+  # rows/cols: omitted -> auto-grid from len(sources)
+  #   1 -> 1x1, 2 -> 1x2, 3-4 -> 2x2, 5-6 -> 2x3, 7-8 -> 2x4
 
 pgie:
-  config_file: configs/config_infer.txt
-  preprocess_width: 640
-  preprocess_height: 640
-  conf_threshold: 0.25
-  labels_file: /deepstream/labels.txt
+  # Swap this single line to switch model.
+  config_file: configs/pgie_rfdetr.yaml   # alt: configs/pgie_yolo26x.yaml
 
 tracker:
   config_file: configs/tracker_config_dcf.txt
 
 file_source:
-  loop: true
+  loop: false

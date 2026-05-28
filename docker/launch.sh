@@ -29,7 +29,7 @@ if [[ $ACTION == "" ]]; then
 	usage && exit;
 fi
 
-BASE_IMAGE=nvcr.io/nvidia/deepstream:8.0-triton-multiarch
+BASE_IMAGE=nvcr.io/nvidia/deepstream:9.0-triton-multiarch
 DOCKER_FILE=docker/Dockerfile
 DOCKER_TAG=yolo26x-ds
 DOCKER_TAG_VERSION=v1.0

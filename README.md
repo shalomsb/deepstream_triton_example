@@ -18,7 +18,7 @@ Real-time object detection and tracking using YOLO26x on DeepStream with a Trito
 
 - NVIDIA GPU with CUDA support
 - Docker with NVIDIA runtime (`nvidia-container-toolkit`)
-- DeepStream 8.0 base image
+- DeepStream 9.0 base image
 
 ### Build
 
@@ -28,7 +28,7 @@ Real-time object detection and tracking using YOLO26x on DeepStream with a Trito
 ```
 
 This will:
-- Build the Docker image with DeepStream 8.0 + Triton
+- Build the Docker image with DeepStream 9.0 + Triton
 - Download YOLO26x weights and export to TensorRT
 - Build the Triton Python backend with GPU support
 
@@ -198,8 +198,7 @@ deepstream_triton_example/
 │   ├── launch.sh
 │   └── requirements.txt
 └── scripts/
-    ├── install_models.sh                    # YOLO26x export + TRT build
-    └── install_triton_python_backend_gpu.sh # Triton Python backend
+    └── install_models.sh                    # YOLO26x export + TRT build
 ```
 
 ---

@@ -1,0 +1,38 @@
+name: "rfdetr_large"
+platform: "tensorrt_plan"
+max_batch_size: 8
+
+# Verify input/output names + dims against the ONNX printed by install_rfdetr.sh.
+# rfdetr's export typically uses:
+#   input  "input"   FP32 [3, 704, 704]
+#   output "dets"    FP32 [N_queries, 4]   (cxcywh normalized)
+#   output "labels"  FP32 [N_queries, num_classes]   (raw logits)
+# If names or N_queries / num_classes differ, edit here + the postprocess + ensemble.
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [3, 704, 704]
+  }
+]
+
+output [
+  {
+    name: "dets"
+    data_type: TYPE_FP32
+    dims: [300, 4]
+  },
+  {
+    name: "labels"
+    data_type: TYPE_FP32
+    dims: [300, 91]
+  }
+]
+
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+    gpus: [0]
+  }
+]

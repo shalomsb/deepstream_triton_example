@@ -1,0 +1,6 @@
+infer_config: config_infer_rfdetr.txt
+network_width: 704
+network_height: 704
+conf_threshold: 0.25
+maintain_aspect_ratio: true
+labels_file: /deepstream/labels_coco91.txt

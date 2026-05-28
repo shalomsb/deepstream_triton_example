@@ -5,7 +5,7 @@ infer_config {
 
   backend {
     triton {
-      model_name: "yolo26x_ensemble"
+      model_name: "rfdetr_large_ensemble"
       version: -1
       model_repo {
         root: "/triton/model_repo"
@@ -30,6 +30,10 @@ infer_config {
 
   postprocess {
     other {}
+  }
+
+  extra {
+    output_buffer_pool_size: 4
   }
 }
 

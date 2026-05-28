@@ -1,0 +1,56 @@
+name: "rfdetr_large_ensemble"
+platform: "ensemble"
+max_batch_size: 8
+
+input [
+  {
+    name: "input_images"
+    data_type: TYPE_UINT8
+    dims: [3, 720, 1280]
+  }
+]
+
+output [
+  {
+    name: "ensemble_labels"
+    data_type: TYPE_INT64
+    dims: [300]
+  },
+  {
+    name: "ensemble_scores"
+    data_type: TYPE_FP32
+    dims: [300]
+  },
+  {
+    name: "ensemble_boxes"
+    data_type: TYPE_FP32
+    dims: [300, 4]
+  }
+]
+
+ensemble_scheduling {
+  step [
+    {
+      model_name: "rfdetr_preprocess"
+      model_version: 1
+      input_map  { key: "input_images"        value: "input_images" }
+      output_map { key: "preprocessed_image"  value: "preprocessed_image" }
+    },
+    {
+      model_name: "rfdetr_large"
+      model_version: 1
+      input_map  { key: "input"   value: "preprocessed_image" }
+      output_map { key: "dets"    value: "dets" }
+      output_map { key: "labels"  value: "labels" }
+    },
+    {
+      model_name: "rfdetr_postprocess"
+      model_version: 1
+      input_map  { key: "dets"             value: "dets" }
+      input_map  { key: "labels"           value: "labels" }
+      output_map { key: "ensemble_labels"  value: "ensemble_labels" }
+      output_map { key: "ensemble_scores"  value: "ensemble_scores" }
+      output_map { key: "ensemble_boxes"   value: "ensemble_boxes" }
+    }
+  ]
+}

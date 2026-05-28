@@ -30,8 +30,8 @@ mkdir -p "${YOLO_MODEL_DIR}"
 trtexec --onnx=/tmp/yolo26x.onnx \
     --saveEngine="${YOLO_MODEL_DIR}/model.plan" \
     --minShapes=images:1x3x640x640 \
-    --optShapes=images:1x3x640x640 \
-    --maxShapes=images:1x3x640x640 \
+    --optShapes=images:4x3x640x640 \
+    --maxShapes=images:8x3x640x640 \
     --fp16 \
     --memPoolSize=workspace:4096
 

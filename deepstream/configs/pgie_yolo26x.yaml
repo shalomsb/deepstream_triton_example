@@ -1,0 +1,6 @@
+infer_config: config_infer.txt
+network_width: 640
+network_height: 640
+conf_threshold: 0.25
+maintain_aspect_ratio: false
+labels_file: /deepstream/labels.txt
