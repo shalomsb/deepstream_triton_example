@@ -31,6 +31,7 @@ the host `./psm` is bind-mounted at `/psm` (added to `docker/launch.sh`); run a 
 | `main5.py` | per-box label text | set `obj.text_params` (raw `osd.TextParams`) |
 | `main6.py` | tracker | `.track(ll_lib_file=…, ll_config_file=…)` — **see limitation below** |
 | `main7.py` | per-frame HUD | `batch_meta.acquire_display_meta()` + `osd.Text()` (friendly wrapper) → `add_text` → `frame.append` |
+| `main8.py` | **working tracker** | native detection parsing (custom bbox parser `.so`) → nvinferserver sets `bInferDone` → real `object_id`. Drops the converter probe. |
 | `runner.py` | graceful Ctrl-C | run pipeline in a child process; stop via `pipeline.stop()` for clean Triton unload |
 
 Mapping vs the classic pyds pipeline:
@@ -103,13 +104,31 @@ The classic pyds pipeline (`deepstream/callbacks.py`) compensates with
 `pyds` IS installed (`/opt/pyds_env/.../pyds.so`) but is **unreachable** from inside a
 pyservicemaker pipeline.
 
-**Working fixes (both require C++):**
+**The fix — Option A (native detection parsing), implemented in `main8.py`:**
 
-- **A — native nvinferserver detection parsing:** add a custom `NvDsInferParse*.so` +
-  `postprocess { detection {} }` so `nvinferserver` attaches `NvDsObjectMeta` *and* sets
-  `bInferDone` itself. Cleanest at runtime; also benefits the classic pipeline.
-- **B — C++ service-maker buffer-probe module:** compile a small module (template:
-  `service-maker/sources/modules/sample_video_probe/`) that sets `bInferDone`.
+Instead of emitting raw tensors and rebuilding detections in a probe, let `nvinferserver`
+run its **detection** postprocess with a custom bbox parser. That path calls
+`attachDetectionMetadata()` (which sets `bInferDone`), so the tracker tracks. Pieces:
 
-For the learning ladder we stop at detections-only under pyservicemaker; **stable tracking
-lives in the production pyds `main.py`**, which already sets `bInferDone` correctly.
+| File | Role |
+|------|------|
+| `deepstream/parser/nvdsparsebbox_yolo26_ensemble.cpp` | `NvDsInferParseCustomYolo26Ensemble` — splits `ensemble_labels`/`scores`/`boxes` into `NvDsInferObjectDetectionInfo` (640→networkInfo scale, clip). Ensemble already ran NMS, so it's a pure reformat. |
+| `deepstream/parser/Makefile` | builds `libnvds_yolo26_ensemble_parser.so` against DS headers |
+| `scripts/build_parser.sh` | in-container build (auto-detects `CUDA_VER`); wired into `entrypoint.sh -b` |
+| `deepstream/configs/config_infer_detection.txt` | nvinferserver config using `postprocess { detection { custom_parse_bbox_func … } }` + `custom_lib`, instead of `other {}` + `output_tensor_meta`. **Kept separate** so the raw-tensor `config_infer.txt` (used by the classic pyds `main.py` and ladder rungs 4–7) still works. |
+| `psm/main8.py` | the rung: drops `DetectionConverter`, points `.infer()` at the detection config, `.track()` now yields real IDs |
+
+> **STATUS:** the parser **compiles in-container** and exports
+> `NvDsInferParseCustomYolo26Ensemble` (`build_parser.sh` auto-detected CUDA 13.1; the
+> `CHECK_CUSTOM_PARSE_FUNC_PROTOTYPE` infinite-recursion warning is NVIDIA's own macro, harmless).
+> **Still to confirm on a GPU+display run** — `./docker/launch.sh -b` (build), then
+> `./docker/launch.sh -d` and inside the shell `cd /psm && python3 main8.py`:
+> (1) nvinferserver accepts the `detection`/`simple_cluster` schema — the
+> field names are best-effort, so if it's rejected check
+> `/opt/nvidia/deepstream/deepstream/sources/includes/nvdsinferserver/*.proto`; (2) `ID:` values
+> increment instead of all showing `0`.
+
+- **Alternative B — C++ service-maker buffer-probe module:** compile a small module (template:
+  `psm/service-maker/sources/modules/sample_video_probe/`) that sets `bInferDone` on the buffer.
+  Heavier; Option A is preferred because it also lets the classic pyds pipeline drop its manual
+  tensor parsing.

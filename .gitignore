@@ -13,4 +13,5 @@ __pycache__
 app/deepstream_app.c
 *.onnx.data
 *.whl
+*.so
 CLAUDE.md

@@ -28,6 +28,7 @@ done
 if [[ $ACTION == '-b' ]]; then
     bash /opt/scripts/install_models.sh
     bash /opt/scripts/install_rfdetr.sh
+    bash /opt/scripts/build_parser.sh
 elif [[ $ACTION == '-r' ]]; then
     cd /deepstream
     python3 main.py
