@@ -5,7 +5,8 @@
 from pyservicemaker import Pipeline, Flow
 from multiprocessing import Process
 
-VIDEO = "/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4"
+# nvurisrcbin wants a URI, not a bare path -> file://<abspath>
+VIDEO = "file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4"
 # 2 URIs -> source_id 0, 1
 SOURCES = [VIDEO, VIDEO]
 # backend { triton { model_name: "yolo26x_ensemble" } }  -- in-process Triton, no separate server

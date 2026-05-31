@@ -122,12 +122,14 @@ run its **detection** postprocess with a custom bbox parser. That path calls
 > **STATUS:** the parser **compiles in-container** and exports
 > `NvDsInferParseCustomYolo26Ensemble` (`build_parser.sh` auto-detected CUDA 13.1; the
 > `CHECK_CUSTOM_PARSE_FUNC_PROTOTYPE` infinite-recursion warning is NVIDIA's own macro, harmless).
+> **Config schema verified** against `nvdsinferserver_config.proto` +
+> `nvdsinferserver_common.proto`: `PostProcessParams`/`DetectionParams`/`CustomLib` field names
+> are correct, and `simple_cluster` is a threshold-only filter (no box merging) — the
+> nvinferserver equivalent of nvinfer `cluster-mode=4` (None), exactly right for our post-NMS
+> ensemble output (`Nms` is "not supported yet" in nvinferserver).
 > **Still to confirm on a GPU+display run** — `./docker/launch.sh -b` (build), then
-> `./docker/launch.sh -d` and inside the shell `cd /psm && python3 main8.py`:
-> (1) nvinferserver accepts the `detection`/`simple_cluster` schema — the
-> field names are best-effort, so if it's rejected check
-> `/opt/nvidia/deepstream/deepstream/sources/includes/nvdsinferserver/*.proto`; (2) `ID:` values
-> increment instead of all showing `0`.
+> `./docker/launch.sh -d` and `cd /psm && python3 main8.py`: that it runs end-to-end and `ID:`
+> values increment instead of all showing `0`.
 
 - **Alternative B — C++ service-maker buffer-probe module:** compile a small module (template:
   `psm/service-maker/sources/modules/sample_video_probe/`) that sets `bInferDone` on the buffer.

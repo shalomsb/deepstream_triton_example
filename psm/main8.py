@@ -18,7 +18,8 @@
 from pyservicemaker import Pipeline, Flow, BatchMetadataOperator, Probe, osd
 from runner import run
 
-VIDEO = "/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4"
+# nvurisrcbin wants a URI, not a bare path -> file://<abspath>
+VIDEO = "file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4"
 SOURCES = [VIDEO, VIDEO]
 # detection-path config (custom parser) instead of the raw-tensor config_infer.txt
 INFER = "/deepstream/configs/config_infer_detection.txt"

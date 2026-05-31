@@ -5,10 +5,14 @@
 # frameMeta->bInferDone -> nvtracker assigns real object_ids. See psm/FINDINGS.md
 # ("Option A"). The custom_lib parser splits the ensemble's three output layers.
 #
-# NOTE: nvinferserver uses a protobuf schema (NOT the nvinfer INI format). If the
-# server rejects a field below, verify names against the in-container proto:
-#   /opt/nvidia/deepstream/deepstream/sources/includes/nvdsinferserver/*.proto
-#   (DetectionParams / SimpleCluster / CustomLib messages)
+# nvinferserver uses a protobuf schema (NOT the nvinfer INI format). Fields below
+# are verified against nvdsinferserver_config.proto + nvdsinferserver_common.proto:
+#   PostProcessParams { labelfile_path; oneof: detection|classification|other }
+#   DetectionParams   { num_detected_classes; custom_parse_bbox_func; oneof cluster }
+#   CustomLib         { path }
+# simple_cluster is a THRESHOLD-ONLY filter (no box merging) -> the nvinferserver
+# equivalent of nvinfer cluster-mode=4 (None), which is exactly right for our
+# already-post-NMS ensemble output. (Nms is marked "not supported yet" here.)
 
 infer_config {
   unique_id: 1
