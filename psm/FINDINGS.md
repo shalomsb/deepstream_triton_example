@@ -32,6 +32,7 @@ the host `./psm` is bind-mounted at `/psm` (added to `docker/launch.sh`); run a 
 | `main6.py` | tracker | `.track(ll_lib_file=…, ll_config_file=…)` — **see limitation below** |
 | `main7.py` | per-frame HUD | `batch_meta.acquire_display_meta()` + `osd.Text()` (friendly wrapper) → `add_text` → `frame.append` |
 | `main8.py` | **working tracker** | native detection parsing (custom bbox parser `.so`) → nvinferserver sets `bInferDone` → real `object_id`. Drops the converter probe. |
+| `main9.py` | FPS printing | built-in probe by name: `.attach(what="measure_fps_probe", name="fps_probe")` — attach before `render()`, on a src pad (never a sink) |
 | `runner.py` | graceful Ctrl-C | run pipeline in a child process; stop via `pipeline.stop()` for clean Triton unload |
 
 Mapping vs the classic pyds pipeline:
