@@ -4,6 +4,17 @@ A step-by-step exploration of NVIDIA's **pyservicemaker** (the high-level `Flow`
 API in DeepStream 9.0), rebuilding this repo's YOLO26x + Triton pipeline one feature at a
 time. Each `mainN.py` adds exactly one concept on top of the previous.
 
+**Old vs new, side by side.** This `psm/` tree is a top-level sibling of `deepstream/`:
+
+- `deepstream/` — the **old** way: hand-wired GStreamer via `pyds` (`main.py`, `ds_pipeline/`,
+  the `pgie_src_probe`/`osd_probe` in `callbacks.py`).
+- `psm/` — the **new** way: the pyservicemaker `Flow` API (this ladder).
+
+Both drive the **same** Triton ensemble (`yolo26x_ensemble`) through the same nvinferserver
+config (`/deepstream/configs/config_infer.txt`) — only the front-end differs. In the container
+the host `./psm` is bind-mounted at `/psm` (added to `docker/launch.sh`); run a rung with
+`./docker/launch.sh -d` then `cd /psm && python3 main7.py`.
+
 > The `service-maker/` source tree referenced below is NVIDIA proprietary SDK source and is
 > **not** committed here. Find it inside the container at
 > `/opt/nvidia/deepstream/deepstream-9.0/service-maker/` and the installed package at
@@ -19,6 +30,7 @@ time. Each `mainN.py` adds exactly one concept on top of the previous.
 | `main4.py` | tensors → boxes | `BatchMetadataOperator` probe: `frame.tensor_items` → `get_layers()` → DLPack → `acquire_object_meta` → `append` |
 | `main5.py` | per-box label text | set `obj.text_params` (raw `osd.TextParams`) |
 | `main6.py` | tracker | `.track(ll_lib_file=…, ll_config_file=…)` — **see limitation below** |
+| `main7.py` | per-frame HUD | `batch_meta.acquire_display_meta()` + `osd.Text()` (friendly wrapper) → `add_text` → `frame.append` |
 | `runner.py` | graceful Ctrl-C | run pipeline in a child process; stop via `pipeline.stop()` for clean Triton unload |
 
 Mapping vs the classic pyds pipeline:
@@ -50,11 +62,16 @@ friendly `osd.Text()` the samples use for HUD text:
 | `.set_bg_color` | **`.set_bg_clr`** |
 | `.bg_color` | **`.text_bg_clr`** |
 
-Both share `display_text`, `x_offset`, `y_offset`. pybind `def_readwrite` struct members can
-return a **copy**, so use get → mutate → assign-back:
-`tp = obj.text_params; …; obj.text_params = tp`.
+Both share `display_text`, `x_offset`, `y_offset`. The ladder shows both live:
+**`main5.py`** sets a per-object label via the raw `obj.text_params` (`font_params`/`set_bg_clr`/
+`text_bg_clr`); **`main7.py`** sets a per-frame HUD via the friendly `osd.Text()` (`font`/
+`set_bg_color`/`bg_color`). Confirmed against the official skill reference
+`deepstream-dev/references/service_maker_api.md` (OSD API §, lines ~766–831).
 
-Discover field names without a GPU: `strings _pydeepstream.so | grep ':ivar'`.
+For the raw struct, pybind `def_readwrite` members can return a **copy**, so use get → mutate →
+assign-back: `tp = obj.text_params; …; obj.text_params = tp`. The friendly `osd.Text()` nested
+`.font` can be assigned directly. Discover field names without a GPU:
+`strings _pydeepstream.so | grep ':ivar'`.
 
 ## Limitation — the tracker can't ID detections that come from a tensor-output probe
 

@@ -48,6 +48,7 @@ if [[ $ACTION == '-b' ]]; then
         --rm --net=host --ipc=host --shm-size=4g --privileged -it \
         --runtime=nvidia --gpus all \
         -v "$(pwd)/deepstream":/deepstream \
+        -v "$(pwd)/psm":/psm \
         -v "$(pwd)/triton/model_repo":/triton/model_repo \
         -v "$(pwd)/scripts":/opt/scripts \
         --entrypoint /opt/entrypoint.sh \
@@ -61,6 +62,7 @@ elif [[ $ACTION == '-r' ]] || [[ $ACTION == '-s' ]] || [[ $ACTION == '-d' ]] ; t
         --net=host --ipc=host --shm-size=4g --privileged -it \
         --runtime=nvidia --gpus all \
         -v "$(pwd)/deepstream":/deepstream \
+        -v "$(pwd)/psm":/psm \
         -v "$(pwd)/triton/model_repo":/triton/model_repo \
         -v "$(pwd)/scripts":/opt/scripts \
         -v /tmp/.X11-unix:/tmp/.X11-unix \

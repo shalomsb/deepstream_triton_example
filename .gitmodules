@@ -1,0 +1,6 @@
+[submodule "DeepStream_Coding_Agent"]
+	path = DeepStream_Coding_Agent
+	url = https://github.com/NVIDIA-AI-IOT/DeepStream_Coding_Agent
+[submodule "inference_builder"]
+	path = inference_builder
+	url = https://github.com/NVIDIA-AI-IOT/inference_builder
